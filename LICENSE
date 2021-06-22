@@ -1,52 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <omp.h>
-#define TRUE 1
+MIT License
 
-void lihatNotes();
-void tambahNote();
-void hapusNote();
-void editProgress();
-void cariNote();
-void urutkanNote();
-void imporNote();
-void eksporNote();
+Copyright (c) 2021 falseth and rolandmaulana
 
-int main(){
-	int menu_pilihan;
-	
-	printf("1. Keluar dari program\n2. Melihat notes\n3. Menambahkan note\n4. Menghapus note\n5. Mengedit progress\n6. Mencari note\n6. Mengurutkan note\n7. Mengimpor note\n8. Mengekspor note\n\nInput:");
-	scanf("%d", &menu_pilihan);
-	
-	while (TRUE){ 
-		switch(menu_pilihan){
-		case 0:
-			break;
-			return 0;
-		case 1:
-			lihatNotes();
-			break;
-		case 2:
-			tambahNote();
-			break;
-		case 3:
-			hapusNote();
-			break;
-		case 4:
-			editProgress();
-			break;
-		case 5:
-			cariNote();
-			break;
-		case 6:
-			urutkanNote();
-			break;
-		case 7:
-			imporNote();
-			break;
-		case 8:
-			eksporNote();
-			break;	
-		}
-	}
-}
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
