@@ -5,7 +5,7 @@
  *	Nama Anggota	:
  *		Muhammad Irsyad Fakhruddin	- 2006468850 (tidak berkontribusi)
  *		Muhammad Roland Maulana		- 2006520784
- *		Yehezkiel Jonatan			- 2006520235
+ *		Yehezkiel Jonatan		- 2006520235
  */
 
 #include <stdio.h>
@@ -25,7 +25,7 @@
 #define SET_COLOR(x) SetConsoleTextAttribute(hConsole, (x))
 #define RESET_COLOR() SetConsoleTextAttribute(hConsole, saved_attributes)
 
-typedef struct Node {
+typedef struct Node { //deklarasi struct dalam bentuk linked list
 	char judul[50], deskripsi[1000], matkul[30];
 	int tanggal, bulan, tahun; // waktu deadline
 	int progress; // dalam persen (0-100)
@@ -34,6 +34,7 @@ typedef struct Node {
 
 typedef Node* NodePtr;
 
+//function prototype
 void displayMenuAndTitle(char *title_string[], int title_size, char *menu_array[], int menu_count, int *menu_selected);
 void displayTitle(char *title_string[], int title_size);
 void displayMenu(char *menu_array[], int menu_count, int menu_selected);
@@ -69,7 +70,7 @@ int main(void) {
 	NodePtr notes = NULL, current_ptr;
 	int menu_selected = 0, note_is_saved = TRUE;
 
-	char *title[] = {
+	char *title[] = { //tampilan menu
 		"***********************************************************\n",
 		"*                                                         *\n",
 		"*                         TekNote                         *\n",
@@ -77,7 +78,7 @@ int main(void) {
 		"*                                                         *\n",
 		"***********************************************************\n"
 	};
-	char *menu[] = {
+	char *menu[] = { //tampilan pilihan menu
 		"Keluar dari program",
 		"Melihat note",
 		"Menambahkan note",
@@ -107,31 +108,31 @@ int main(void) {
 					notes = current_ptr;
 				}
 				return 0;
-			case 1:
+			case 1: //pilihan 1: melihat notes
 				menuViewNote(notes);
 				break;
-			case 2:
+			case 2: //pilihan 2: menambahkan note
 				menuAddNote(&notes);
 				note_is_saved = FALSE;
 				break;
-			case 3:
+			case 3: //pilihan 3: menghapus note
 				menuDeleteNote(&notes);
 				note_is_saved = FALSE;
 				break;
-			case 4:
+			case 4: //pilihan 4: mengedit notes
 				menuEditNote(&notes);
 				note_is_saved = FALSE;
 				break;
-			case 5:
+			case 5: //pilihan 5: mencari notes
 				menuSearchNote(notes);
 				break;
-			case 6:
+			case 6: //pilihan 6: mengurutkan notes
 				//menuSortNote(&notes);
 				break;
-			case 7:
+			case 7: //pilihan 7: mengimpor notes
 				//menuImportNote(&notes);
 				break;
-			case 8:
+			case 8: //pilihan 8: mengekspor notes
 				menuExportNote(notes);
 				note_is_saved = TRUE;
 				break;
@@ -139,7 +140,8 @@ int main(void) {
 	}
 }
 
-void displayMenuAndTitle(
+void displayMenuAndTitle( 
+	//fungsi ini menampilkan pilihan apa yang ingin dilakukan pengguna
 	char *title_string[],
 	int title_size,
 	char *menu_array[],
@@ -148,6 +150,7 @@ void displayMenuAndTitle(
 ) {
 	char char_input;
 	do {
+		//pengguna memilih apa yang akan dilakukannya di sini
 		system("cls");
 		displayTitle(title_string, title_size);
 		displayMenu(menu_array, menu_count, *menu_selected);
@@ -172,6 +175,7 @@ void displayMenuAndTitle(
 }
 
 void displayTitle(char *title_string[], int title_size) {
+	//fungsi ini menampilkan judul dengan lebih jelas di setiap bagian yang akan dijalankan
 	int i;
 	INIT_CONSOLE();
 
@@ -182,6 +186,7 @@ void displayTitle(char *title_string[], int title_size) {
 }
 
 void displayMenu(char *menu_array[], int menu_count, int menu_selected) {
+	//fungsi ini menampilkan menu pilihan dan menjadi tempat pengguna memilih menu
 	int i;
 	INIT_CONSOLE();
 
@@ -199,6 +204,7 @@ void displayMenu(char *menu_array[], int menu_count, int menu_selected) {
 }
 
 void displayMenuExit(void) {
+	//fungsi ini berfungsi untuk menjadi penghubung akhir suatu menu pilihan menuju pilihan selanjutnya
 	printf("\n\npress any key to continue...");
 	fflush(stdin);
 	getch();
@@ -206,6 +212,7 @@ void displayMenuExit(void) {
 }
 
 int getInteger(int lower_bound, int upper_bound, char *message) {
+	//fungsi ini berfungsi untuk menerima input pengguna yang berupa bilangan bulat
 	int integer, scanf_return;
 
 	// Terus meminta integer sampai input user valid
@@ -234,6 +241,7 @@ int getInteger(int lower_bound, int upper_bound, char *message) {
 }
 
 char *getString(char *string, int size, char *message) {
+	//fungsi ini berfungsi untuk menerima input pengguna yang berupa string
 	int i, length;
 
 	do {
@@ -263,6 +271,7 @@ char *getString(char *string, int size, char *message) {
 }
 
 char *lowercase(char *string) {
+	//mengubah string menjadi huruf kecil untuk menghindari kesalahan dalam program
 	int i;
 	for (i = 0; string[i] != '\0'; i++)
 		string[i] = tolower(string[i]);
@@ -356,9 +365,10 @@ void printNote(NodePtr notes, int start, int length, char *message, int selected
 }
 
 void selectNote(NodePtr notes, int note_count, int note_selected) {
+	//memilih dan menampilkan notes dengan tampilan yang menarik
 	INIT_CONSOLE();
 	printNote(notes, 1, note_count, "--- ALL NOTES ---", note_selected);
-
+	//jika yang dipilih adalah keluar, maka menampilkan tampilan khusus keluar
 	if (note_selected == 0)
 		SET_COLOR(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 	printf("\nKeluar dari menu\n");
@@ -366,7 +376,7 @@ void selectNote(NodePtr notes, int note_count, int note_selected) {
 }
 
 void printNoteDescription(NodePtr notes, int index) {
-// Menampilkan suatu note dengan deskripsinya
+	// Menampilkan suatu note dengan deskripsinya
 	int i;
 	INIT_CONSOLE();
 	// menampilkan deskripsi note berwarna sesuai urgency deadline dan progress
@@ -397,6 +407,7 @@ void printNoteDescription(NodePtr notes, int index) {
 }
 
 void deleteNote(NodePtr *notes, int index) {
+	//menghapus note
 	int i;
 	NodePtr temp_ptr, previous_ptr, current_ptr;
 	
@@ -418,13 +429,14 @@ void deleteNote(NodePtr *notes, int index) {
 }
 
 void searchJudul(NodePtr notes, char *key) {
+	//mencari notes berdasarkan judul
 	int i, j, k, key_count = 0, judul_count = 0, found = FALSE, match;
 	char *key_words[25], *judul_words[25], judul[50];
 
 	lowercase(key);
 	findWords(key, key_words, &key_count);
 
-	// linar search
+	// linear search
 	for (i = 1; notes != NULL; i++) {
 		match = TRUE;
 		strcpy(judul, notes->judul);
@@ -458,13 +470,14 @@ void searchJudul(NodePtr notes, char *key) {
 }
 
 void searchMatkul(NodePtr notes, char *key) {
+	//mencari notes berdasarkan matkul
 	int i, j, k, key_count = 0, matkul_count = 0, found = FALSE, match;
 	char *key_words[25], *matkul_words[25], matkul[50];
 
 	lowercase(key);
 	findWords(key, key_words, &key_count);
 
-	// linar search
+	// linear search
 	for (i = 1; notes != NULL; i++) {
 		match = TRUE;
 		strcpy(matkul, notes->matkul);
@@ -575,6 +588,7 @@ void mergeDeadlineDescending(Note *destination, Note *source, int i_begin, int i
 }
 */
 void displayNoteSelected(NodePtr notes, int *note_selected) {
+	//fungsi ini menampilkan note yang dipilih
 	NodePtr temp = notes;
 	int note_count = 0;
 	char char_input;
@@ -604,6 +618,7 @@ void displayNoteSelected(NodePtr notes, int *note_selected) {
 }
 
 int emptyNoteError(NodePtr notes) {
+	//fungsi ini merupakan error handling untuk note yang kosong
 	if (notes == NULL) {
 		printf("ERROR: note kosong!\n");
 		displayMenuExit();
@@ -613,6 +628,7 @@ int emptyNoteError(NodePtr notes) {
 }
 
 void menuViewNote(NodePtr notes) {
+	//fungsi ini menampilkan notes yang ada
 	if (emptyNoteError(notes))
 		return;
 
@@ -629,6 +645,7 @@ void menuViewNote(NodePtr notes) {
 }
 
 void menuAddNote(NodePtr *notes) {
+	//fungsi ini menginput note baru
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -667,6 +684,7 @@ void menuAddNote(NodePtr *notes) {
 }
 
 void menuDeleteNote(NodePtr *notes) {
+	//fungsi ini menghapus note
 	if (emptyNoteError(*notes))
 		return;
 
@@ -691,6 +709,7 @@ void menuDeleteNote(NodePtr *notes) {
 }
 
 void menuEditNote(NodePtr *notes) {
+	//fungsi ini mengedit note yang sudah ada
 	if (emptyNoteError(*notes))
 		return;
 
@@ -724,6 +743,7 @@ void menuEditNote(NodePtr *notes) {
 }
 
 void menuSearchNote(NodePtr notes) {
+	//fungsi ini menjadi awal menu search note
 	if (emptyNoteError(notes))
 		return;
 
@@ -746,12 +766,12 @@ void menuSearchNote(NodePtr notes) {
 		switch (menu_selected) {
 			case 0:
 				return;
-			case 1:
+			case 1://mencari berdasarkan judul
 				getString(key, 50, "Masukkan judul yang ingin dicari");
 				searchJudul(notes, key);
 				displayMenuExit();
 				break;
-			case 2:
+			case 2://mencari berdasarkan mata kuliah
 				getString(key, 30, "Masukkan mata kuliah yang ingin dicari");
 				searchMatkul(notes, key);
 				displayMenuExit();
@@ -900,6 +920,7 @@ void menuImportNote(NodePtr *notes) {
 }
 */
 void menuExportNote(NodePtr notes) {
+	//fungsi ini mengekspor note yang ada
 	if (emptyNoteError(notes))
 		return;
 
