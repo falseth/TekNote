@@ -5,7 +5,7 @@
  *	Nama Anggota	:
  *		Muhammad Irsyad Fakhruddin	- 2006468850 (tidak berkontribusi)
  *		Muhammad Roland Maulana		- 2006520784
- *		Yehezkiel Jonatan		- 2006520235
+ *		Yehezkiel Jonatan			- 2006520235
  */
 
 #include <stdio.h>
@@ -26,7 +26,7 @@
 #define SET_COLOR(x) SetConsoleTextAttribute(hConsole, (x))
 #define RESET_COLOR() SetConsoleTextAttribute(hConsole, saved_attributes)
 
-typedef struct Node { //deklarasi struct dalam bentuk linked list
+typedef struct Node {
 	char judul[50], deskripsi[1000], matkul[30];
 	int tanggal, bulan, tahun; // waktu deadline
 	int progress; // dalam persen (0-100)
@@ -35,7 +35,6 @@ typedef struct Node { //deklarasi struct dalam bentuk linked list
 
 typedef Node* NodePtr;
 
-//function prototype
 void displayMenuAndTitle(char *title_string[], int title_size, char *menu_array[], int menu_count, int *menu_selected);
 void displayTitle(char *title_string[], int title_size);
 void displayMenu(char *menu_array[], int menu_count, int menu_selected);
@@ -71,8 +70,9 @@ void menuExportNote(NodePtr notes);
 int main(void) {
 	NodePtr notes = NULL, current_ptr;
 	int menu_selected = 0, note_is_saved = TRUE;
+	omp_set_num_threads(1);
 
-	char *title[] = { //tampilan menu
+	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
 		"*                         TekNote                         *\n",
@@ -80,7 +80,7 @@ int main(void) {
 		"*                                                         *\n",
 		"***********************************************************\n"
 	};
-	char *menu[] = { //tampilan pilihan menu
+	char *menu[] = {
 		"Keluar dari program",
 		"Melihat note",
 		"Menambahkan note",
@@ -110,31 +110,31 @@ int main(void) {
 					notes = current_ptr;
 				}
 				return 0;
-			case 1: //pilihan 1: melihat notes
+			case 1:
 				menuViewNote(notes);
 				break;
-			case 2: //pilihan 2: menambahkan note
+			case 2:
 				menuAddNote(&notes);
 				note_is_saved = FALSE;
 				break;
-			case 3: //pilihan 3: menghapus note
+			case 3:
 				menuDeleteNote(&notes);
 				note_is_saved = FALSE;
 				break;
-			case 4: //pilihan 4: mengedit notes
+			case 4:
 				menuEditNote(&notes);
 				note_is_saved = FALSE;
 				break;
-			case 5: //pilihan 5: mencari notes
+			case 5:
 				menuSearchNote(notes);
 				break;
-			case 6: //pilihan 6: mengurutkan notes
-				//menuSortNote(&notes);
+			case 6:
+				menuSortNote(&notes);
 				break;
-			case 7: //pilihan 7: mengimpor notes
-				//menuImportNote(&notes);
+			case 7:
+				menuImportNote(&notes);
 				break;
-			case 8: //pilihan 8: mengekspor notes
+			case 8:
 				menuExportNote(notes);
 				note_is_saved = TRUE;
 				break;
@@ -142,8 +142,7 @@ int main(void) {
 	}
 }
 
-void displayMenuAndTitle( 
-	//fungsi ini menampilkan pilihan apa yang ingin dilakukan pengguna
+void displayMenuAndTitle(
 	char *title_string[],
 	int title_size,
 	char *menu_array[],
@@ -152,7 +151,6 @@ void displayMenuAndTitle(
 ) {
 	char char_input;
 	do {
-		//pengguna memilih apa yang akan dilakukannya di sini
 		system("cls");
 		displayTitle(title_string, title_size);
 		displayMenu(menu_array, menu_count, *menu_selected);
@@ -177,7 +175,6 @@ void displayMenuAndTitle(
 }
 
 void displayTitle(char *title_string[], int title_size) {
-	//fungsi ini menampilkan judul dengan lebih jelas di setiap bagian yang akan dijalankan
 	int i;
 	INIT_CONSOLE();
 
@@ -188,7 +185,6 @@ void displayTitle(char *title_string[], int title_size) {
 }
 
 void displayMenu(char *menu_array[], int menu_count, int menu_selected) {
-	//fungsi ini menampilkan menu pilihan dan menjadi tempat pengguna memilih menu
 	int i;
 	INIT_CONSOLE();
 
@@ -206,7 +202,6 @@ void displayMenu(char *menu_array[], int menu_count, int menu_selected) {
 }
 
 void displayMenuExit(void) {
-	//fungsi ini berfungsi untuk menjadi penghubung akhir suatu menu pilihan menuju pilihan selanjutnya
 	printf("\n\npress any key to continue...");
 	fflush(stdin);
 	getch();
@@ -214,7 +209,6 @@ void displayMenuExit(void) {
 }
 
 int getInteger(int lower_bound, int upper_bound, char *message) {
-	//fungsi ini berfungsi untuk menerima input pengguna yang berupa bilangan bulat
 	int integer, scanf_return;
 
 	// Terus meminta integer sampai input user valid
@@ -243,7 +237,6 @@ int getInteger(int lower_bound, int upper_bound, char *message) {
 }
 
 char *getString(char *string, int size, char *message) {
-	//fungsi ini berfungsi untuk menerima input pengguna yang berupa string
 	int i, length;
 
 	do {
@@ -273,7 +266,6 @@ char *getString(char *string, int size, char *message) {
 }
 
 char *lowercase(char *string) {
-	//mengubah string menjadi huruf kecil untuk menghindari kesalahan dalam program
 	int i;
 	for (i = 0; string[i] != '\0'; i++)
 		string[i] = tolower(string[i]);
@@ -375,10 +367,9 @@ void printNote(NodePtr notes, int start, int length, char *message, int selected
 }
 
 void selectNote(NodePtr notes, int note_count, int note_selected) {
-	//memilih dan menampilkan notes dengan tampilan yang menarik
 	INIT_CONSOLE();
 	printNote(notes, 1, note_count, "--- ALL NOTES ---", note_selected);
-	//jika yang dipilih adalah keluar, maka menampilkan tampilan khusus keluar
+
 	if (note_selected == 0)
 		SET_COLOR(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 	printf("\nKeluar dari menu\n");
@@ -386,7 +377,7 @@ void selectNote(NodePtr notes, int note_count, int note_selected) {
 }
 
 void printNoteDescription(NodePtr notes, int index) {
-	// Menampilkan suatu note dengan deskripsinya
+// Menampilkan suatu note dengan deskripsinya
 	int i;
 	INIT_CONSOLE();
 	// menampilkan deskripsi note berwarna sesuai urgency deadline dan progress
@@ -417,7 +408,6 @@ void printNoteDescription(NodePtr notes, int index) {
 }
 
 void deleteNote(NodePtr *notes, int index) {
-	//menghapus note
 	int i;
 	NodePtr temp_ptr, previous_ptr, current_ptr;
 	
@@ -439,14 +429,13 @@ void deleteNote(NodePtr *notes, int index) {
 }
 
 void searchJudul(NodePtr notes, char *key) {
-	//mencari notes berdasarkan judul
 	int i, j, k, key_count = 0, judul_count = 0, found = FALSE, match;
 	char *key_words[25], *judul_words[25], judul[50];
 
 	lowercase(key);
 	findWords(key, key_words, &key_count);
 
-	// linear search
+	// linar search
 	for (i = 1; notes != NULL; i++) {
 		match = TRUE;
 		strcpy(judul, notes->judul);
@@ -480,14 +469,13 @@ void searchJudul(NodePtr notes, char *key) {
 }
 
 void searchMatkul(NodePtr notes, char *key) {
-	//mencari notes berdasarkan matkul
 	int i, j, k, key_count = 0, matkul_count = 0, found = FALSE, match;
 	char *key_words[25], *matkul_words[25], matkul[50];
 
 	lowercase(key);
 	findWords(key, key_words, &key_count);
 
-	// linear search
+	// linar search
 	for (i = 1; notes != NULL; i++) {
 		match = TRUE;
 		strcpy(matkul, notes->matkul);
@@ -525,9 +513,12 @@ void sortNote(Node *destination, Node *source, int i_begin, int i_end, int mode)
 		return;
 
 	int i_middle = (i_begin + i_end) / 2;
-
+	
+	#pragma omp task
 	sortNote(source, destination, i_begin, i_middle, mode);
+	#pragma omp task
 	sortNote(source, destination, i_middle, i_end, mode);
+	#pragma omp taskwait
 
 	switch (mode) {
 		case 0:
@@ -547,12 +538,15 @@ void sortNote(Node *destination, Node *source, int i_begin, int i_end, int mode)
 
 void mergeProgressAscending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
+	#pragma omp parallel for reduction(+:i) reduction(+:j)
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || source[i].progress <= source[j].progress)) {
 			destination[k] = source[i];
+			#pragma omp critical
 			i++;
 		} else {
 			destination[k] = source[j];
+			#pragma omp critical
 			j++;
 		}
 	}
@@ -560,12 +554,15 @@ void mergeProgressAscending(Node *destination, Node *source, int i_begin, int i_
 
 void mergeProgressDescending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
+	#pragma omp parallel for reduction(+:i) reduction(+:j)
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || source[i].progress >= source[j].progress)) {
 			destination[k] = source[i];
+			#pragma omp critical
 			i++;
 		} else {
 			destination[k] = source[j];
+			#pragma omp critical
 			j++;
 		}
 	}
@@ -573,12 +570,15 @@ void mergeProgressDescending(Node *destination, Node *source, int i_begin, int i
 
 void mergeDeadlineAscending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
+	#pragma omp parallel for reduction(+:i) reduction(+:j)
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || deadlineCompare(source[i], source[j]) <= 0)) {
 			destination[k] = source[i];
+			#pragma omp critical
 			i++;
 		} else {
 			destination[k] = source[j];
+			#pragma omp critical
 			j++;
 		}
 	}
@@ -586,19 +586,21 @@ void mergeDeadlineAscending(Node *destination, Node *source, int i_begin, int i_
 
 void mergeDeadlineDescending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
+	#pragma omp parallel for reduction(+:i) reduction(+:j)
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || deadlineCompare(source[i], source[j]) >= 0)) {
 			destination[k] = source[i];
+			#pragma omp critical
 			i++;
 		} else {
 			destination[k] = source[j];
+			#pragma omp critical
 			j++;
 		}
 	}
 }
 
 void displayNoteSelected(NodePtr notes, int *note_selected) {
-	//fungsi ini menampilkan note yang dipilih
 	NodePtr temp = notes;
 	int note_count = 0;
 	char char_input;
@@ -628,7 +630,6 @@ void displayNoteSelected(NodePtr notes, int *note_selected) {
 }
 
 int emptyNoteError(NodePtr notes) {
-	//fungsi ini merupakan error handling untuk note yang kosong
 	if (notes == NULL) {
 		printf("ERROR: note kosong!\n");
 		displayMenuExit();
@@ -638,7 +639,6 @@ int emptyNoteError(NodePtr notes) {
 }
 
 void menuViewNote(NodePtr notes) {
-	//fungsi ini menampilkan notes yang ada
 	if (emptyNoteError(notes))
 		return;
 
@@ -655,7 +655,6 @@ void menuViewNote(NodePtr notes) {
 }
 
 void menuAddNote(NodePtr *notes) {
-	//fungsi ini menginput note baru
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -694,7 +693,6 @@ void menuAddNote(NodePtr *notes) {
 }
 
 void menuDeleteNote(NodePtr *notes) {
-	//fungsi ini menghapus note
 	if (emptyNoteError(*notes))
 		return;
 
@@ -719,7 +717,6 @@ void menuDeleteNote(NodePtr *notes) {
 }
 
 void menuEditNote(NodePtr *notes) {
-	//fungsi ini mengedit note yang sudah ada
 	if (emptyNoteError(*notes))
 		return;
 
@@ -753,7 +750,6 @@ void menuEditNote(NodePtr *notes) {
 }
 
 void menuSearchNote(NodePtr notes) {
-	//fungsi ini menjadi awal menu search note
 	if (emptyNoteError(notes))
 		return;
 
@@ -776,12 +772,12 @@ void menuSearchNote(NodePtr notes) {
 		switch (menu_selected) {
 			case 0:
 				return;
-			case 1://mencari berdasarkan judul
+			case 1:
 				getString(key, 50, "Masukkan judul yang ingin dicari");
 				searchJudul(notes, key);
 				displayMenuExit();
 				break;
-			case 2://mencari berdasarkan mata kuliah
+			case 2:
 				getString(key, 30, "Masukkan mata kuliah yang ingin dicari");
 				searchMatkul(notes, key);
 				displayMenuExit();
@@ -846,80 +842,104 @@ void menuSortNote(NodePtr *notes) {
 				free(sort_array);
 				return;
 			case 1:
-				sortNote(note_array, sort_array, 1, note_count + 1, 0);
-				
-				temp = *notes;
-				for (i = 1; i <= note_count; i++) {
-					strcpy(temp->judul, note_array[i].judul);
-					strcpy(temp->deskripsi, note_array[i].deskripsi);
-					strcpy(temp->matkul, note_array[i].matkul);
-					temp->tahun = note_array[i].tahun;
-					temp->bulan = note_array[i].bulan;
-					temp->tanggal = note_array[i].tanggal;
-					temp->progress = note_array[i].progress;
+				#pragma omp parallel
+				{
+					#pragma omp single
+					sortNote(note_array, sort_array, 1, note_count + 1, 0);
 					
-					temp = temp->next;
+					temp = *notes;
+					for (i = 1; i <= note_count; i++) {
+						strcpy(temp->judul, note_array[i].judul);
+						strcpy(temp->deskripsi, note_array[i].deskripsi);
+						strcpy(temp->matkul, note_array[i].matkul);
+						temp->tahun = note_array[i].tahun;
+						temp->bulan = note_array[i].bulan;
+						temp->tanggal = note_array[i].tanggal;
+						temp->progress = note_array[i].progress;
+						
+						temp = temp->next;
+					}
+					#pragma omp barrier
+					
+					printNote(*notes, 1, note_count, "--- DEADLINE ASCENDING ---", -1);
+					displayMenuExit();
 				}
-				
-				printNote(*notes, 1, note_count, "--- DEADLINE ASCENDING ---", -1);
-				displayMenuExit();
+
 				break;
 			case 2:
-				sortNote(note_array, sort_array, 1, note_count + 1, 1);
-				
-				temp = *notes;
-				for (i = 1; i <= note_count; i++) {
-					strcpy(temp->judul, note_array[i].judul);
-					strcpy(temp->deskripsi, note_array[i].deskripsi);
-					strcpy(temp->matkul, note_array[i].matkul);
-					temp->tahun = note_array[i].tahun;
-					temp->bulan = note_array[i].bulan;
-					temp->tanggal = note_array[i].tanggal;
-					temp->progress = note_array[i].progress;
+				#pragma omp parallel
+				{
+					#pragma omp single
+					sortNote(note_array, sort_array, 1, note_count + 1, 1);
 					
-					temp = temp->next;
+					temp = *notes;
+					for (i = 1; i <= note_count; i++) {
+						strcpy(temp->judul, note_array[i].judul);
+						strcpy(temp->deskripsi, note_array[i].deskripsi);
+						strcpy(temp->matkul, note_array[i].matkul);
+						temp->tahun = note_array[i].tahun;
+						temp->bulan = note_array[i].bulan;
+						temp->tanggal = note_array[i].tanggal;
+						temp->progress = note_array[i].progress;
+						
+						temp = temp->next;
+					}
+					#pragma omp barrier
+					
+					printNote(*notes, 1, note_count, "--- DEADLINE DESCENDING ---", -1);
+					displayMenuExit();
 				}
-				
-				printNote(*notes, 1, note_count, "--- DEADLINE DESCENDING ---", -1);
-				displayMenuExit();
+
 				break;
 			case 3:
-				sortNote(note_array, sort_array, 1, note_count + 1, 2);
-				
-				temp = *notes;
-				for (i = 1; i <= note_count; i++) {
-					strcpy(temp->judul, note_array[i].judul);
-					strcpy(temp->deskripsi, note_array[i].deskripsi);
-					strcpy(temp->matkul, note_array[i].matkul);
-					temp->tahun = note_array[i].tahun;
-					temp->bulan = note_array[i].bulan;
-					temp->tanggal = note_array[i].tanggal;
-					temp->progress = note_array[i].progress;
+				#pragma omp parallel
+				{
+					#pragma omp single
+					sortNote(note_array, sort_array, 1, note_count + 1, 2);
 					
-					temp = temp->next;
+					temp = *notes;
+					for (i = 1; i <= note_count; i++) {
+						strcpy(temp->judul, note_array[i].judul);
+						strcpy(temp->deskripsi, note_array[i].deskripsi);
+						strcpy(temp->matkul, note_array[i].matkul);
+						temp->tahun = note_array[i].tahun;
+						temp->bulan = note_array[i].bulan;
+						temp->tanggal = note_array[i].tanggal;
+						temp->progress = note_array[i].progress;
+						
+						temp = temp->next;
+					}
+					#pragma omp barrier
+					
+					printNote(*notes, 1, note_count, "--- PROGRESS ASCENDING ---", -1);
+					displayMenuExit();
 				}
-				
-				printNote(*notes, 1, note_count, "--- PROGRESS ASCENDING ---", -1);
-				displayMenuExit();
+
 				break;
 			case 4:
-				sortNote(note_array, sort_array, 1, note_count + 1, 3);
-				
-				temp = *notes;
-				for (i = 1; i <= note_count; i++) {
-					strcpy(temp->judul, note_array[i].judul);
-					strcpy(temp->deskripsi, note_array[i].deskripsi);
-					strcpy(temp->matkul, note_array[i].matkul);
-					temp->tahun = note_array[i].tahun;
-					temp->bulan = note_array[i].bulan;
-					temp->tanggal = note_array[i].tanggal;
-					temp->progress = note_array[i].progress;
+				#pragma omp parallel
+				{
+					#pragma omp single
+					sortNote(note_array, sort_array, 1, note_count + 1, 3);
 					
-					temp = temp->next;
+					temp = *notes;
+					for (i = 1; i <= note_count; i++) {
+						strcpy(temp->judul, note_array[i].judul);
+						strcpy(temp->deskripsi, note_array[i].deskripsi);
+						strcpy(temp->matkul, note_array[i].matkul);
+						temp->tahun = note_array[i].tahun;
+						temp->bulan = note_array[i].bulan;
+						temp->tanggal = note_array[i].tanggal;
+						temp->progress = note_array[i].progress;
+						
+						temp = temp->next;
+					}
+					#pragma omp barrier
+					
+					printNote(*notes, 1, note_count, "--- PROGRESS DESCENDING ---", -1);
+					displayMenuExit();
 				}
-				
-				printNote(*notes, 1, note_count, "--- PROGRESS DESCENDING ---", -1);
-				displayMenuExit();
+
 				break;
 		}
 	}
@@ -1002,7 +1022,6 @@ void menuImportNote(NodePtr *notes) {
 }
 
 void menuExportNote(NodePtr notes) {
-	//fungsi ini mengekspor note yang ada
 	if (emptyNoteError(notes))
 		return;
 
