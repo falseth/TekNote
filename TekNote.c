@@ -1,9 +1,9 @@
 /*
- *	Nama Program	: TekNote - Proyek Tengah Semester Kelompok 12
- *	Tanggal			: 4 April 2021
- *	Nomor Grup		: 12
+ *	Nama Program	: TekNote - Proyek Akhir Semester Kelompok 7
+ *	Tanggal			: 24 Juni 2021
+ *	Nomor Grup		: 7
  *	Nama Anggota	:
- *		Muhammad Irsyad Fakhruddin	- 2006468850
+ *		Muhammad Irsyad Fakhruddin	- 2006468850 (tidak berkontribusi)
  *		Muhammad Roland Maulana		- 2006520784
  *		Yehezkiel Jonatan			- 2006520235
  */
@@ -15,7 +15,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#define MAX_NOTE_COUNT 100
 #define TRUE 1
 #define FALSE 0
 #define INIT_CONSOLE() HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);\
@@ -26,11 +25,14 @@
 #define SET_COLOR(x) SetConsoleTextAttribute(hConsole, (x))
 #define RESET_COLOR() SetConsoleTextAttribute(hConsole, saved_attributes)
 
-typedef struct {
+typedef struct Node {
 	char judul[50], deskripsi[1000], matkul[30];
 	int tanggal, bulan, tahun; // waktu deadline
 	int progress; // dalam persen (0-100)
-} Note;
+	struct Node *next;
+} Node;
+
+typedef Node* NodePtr;
 
 void displayMenuAndTitle(char *title_string[], int title_size, char *menu_array[], int menu_count, int *menu_selected);
 void displayTitle(char *title_string[], int title_size);
@@ -40,43 +42,38 @@ int  getInteger(int lower_bound, int upper_bound, char *message);
 char *getString(char *string, int size, char *message);
 char *lowercase(char *string);
 void findWords(char *string, char **words, int *word_count);
-void printNote(Note *notes, int start, int length, char *message, int selected);
-void printNoteDescription(Note *notes, int index);
-void addNote(Note *notes, int index);
-void deleteNote(Note *notes, int index, int note_count);
-void selectNote(Note *notes, int note_count, int note_selected);
-void displayNoteSelected(Note *notes, int note_count, int *note_selected);
-int  deadlineCompare(Note note1, Note note2);
-void searchJudul(Note *notes, int note_count, char *key);
-void searchMatkul(Note *notes, int size, char *key);
-void sortNote(Note *destination, Note *source, int i_begin, int i_end, int mode);
-void mergeProgressAscending(Note *destination, Note *source, int i_begin, int i_middle, int i_end);
-void mergeProgressDescending(Note *destination, Note *source, int i_begin, int i_middle, int i_end);
-void mergeDeadlineAscending(Note *destination, Note *source, int i_begin, int i_middle, int i_end);
-void mergeDeadlineDescending(Note *destination, Note *source, int i_begin, int i_middle, int i_end);
-int  emptyNoteError(int note_count);
-int  maxNoteError(int note_count);
-void menuViewNote(Note *notes, int note_count);
-void menuAddNote(Note *notes, int *note_count);
-void menuDeleteNote(Note *notes, int *note_count);
-void menuEditNoteProgress(Note *notes, int *note_count);
-void menuSearchNote(Note *notes, int note_count);
-void menuSortNote(Note *notes, int note_count);
-void menuImportNote(Note *notes, int *note_count);
-void menuExportNote(Note *notes, int note_count);
+void printNote(NodePtr notes, int start, int length, char *message, int selected);
+void printNoteDescription(NodePtr notes, int index);
+void deleteNote(NodePtr *notes, int index);
+void selectNote(NodePtr notes, int note_count, int note_selected);
+void displayNoteSelected(NodePtr notes, int *note_selected);
+int  daysToDeadline(NodePtr notes);
+void searchJudul(NodePtr notes, char *key);
+void searchMatkul(NodePtr notes, char *key);
+void sortNote(Node *destination, Node *source, int i_begin, int i_end, int mode);
+void mergeProgressAscending(Node *destination, Node *source, int i_begin, int i_middle, int i_end);
+void mergeProgressDescending(Node *destination, Node *source, int i_begin, int i_middle, int i_end);
+void mergeDeadlineAscending(Node *destination, Node *source, int i_begin, int i_middle, int i_end);
+void mergeDeadlineDescending(Node *destination, Node *source, int i_begin, int i_middle, int i_end);
+int  emptyNoteError(NodePtr notes);
+void menuViewNote(NodePtr notes);
+void menuAddNote(NodePtr *notes);
+void menuDeleteNote(NodePtr *notes);
+void menuEditNote(NodePtr *notes);
+void menuSearchNote(NodePtr notes);
+void menuSortNote(NodePtr *notes);
+void menuImportNote(NodePtr *notes);
+void menuExportNote(NodePtr notes);
 
 int main(void) {
-	Note notes[MAX_NOTE_COUNT + 1]; // notes disimpan mulai dari index 1
-	int note_count = 0, menu_selected = 0, note_is_saved = TRUE;
-
-	time_t rawtime;
-	struct tm *timeinfo;
+	NodePtr notes = NULL, current_ptr;
+	int menu_selected = 0, note_is_saved = TRUE;
 
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
 		"*                         TekNote                         *\n",
-		"*            Proyek Tengah Semester Kelompok 12           *\n",
+		"*             Proyek Akhir Semester Kelompok 7            *\n",
 		"*                                                         *\n",
 		"***********************************************************\n"
 	};
@@ -85,7 +82,7 @@ int main(void) {
 		"Melihat note",
 		"Menambahkan note",
 		"Menghapus note",
-		"Mengedit progress",
+		"Mengedit note",
 		"Mencari note",
 		"Mengurutkan note",
 		"Mengimpor note",
@@ -94,49 +91,48 @@ int main(void) {
 
 	// Program akan terus berjalan sampai user memilih opsi exit
 	while (TRUE) {
-		// menyimpan waktu sekarang di notes[0] untuk acuan waktu deadline
-		time(&rawtime);
-		timeinfo = localtime(&rawtime);
-		notes[0].tahun   = timeinfo->tm_year + 1900;
-		notes[0].bulan   = timeinfo->tm_mon + 1;
-		notes[0].tanggal = timeinfo->tm_mday;
-
 		displayMenuAndTitle(title, 6, menu, 9, &menu_selected);
 
 		switch (menu_selected) {
 			case 0: // exit program
 				if (note_is_saved == FALSE) {
 					printf("Note belum tersimpan, tetap keluar program? (tekan y untuk konfirmasi)");
-					if (getch() != 'y')
+					if ((getch() | 32) != 'y')
 						break;
+				}
+				
+				while (notes != NULL) {
+					current_ptr = notes->next;
+					free(notes);
+					notes = current_ptr;
 				}
 				return 0;
 			case 1:
-				menuViewNote(notes, note_count);
+				menuViewNote(notes);
 				break;
 			case 2:
-				menuAddNote(notes, &note_count);
+				menuAddNote(&notes);
 				note_is_saved = FALSE;
 				break;
 			case 3:
-				menuDeleteNote(notes, &note_count);
+				menuDeleteNote(&notes);
 				note_is_saved = FALSE;
 				break;
 			case 4:
-				menuEditNoteProgress(notes, &note_count);
+				menuEditNote(&notes);
 				note_is_saved = FALSE;
 				break;
 			case 5:
-				menuSearchNote(notes, note_count);
+				menuSearchNote(notes);
 				break;
 			case 6:
-				menuSortNote(notes, note_count);
+				//menuSortNote(&notes);
 				break;
 			case 7:
-				menuImportNote(notes, &note_count);
+				//menuImportNote(&notes);
 				break;
 			case 8:
-				menuExportNote(notes, note_count);
+				menuExportNote(notes);
 				note_is_saved = TRUE;
 				break;
 		}
@@ -204,6 +200,7 @@ void displayMenu(char *menu_array[], int menu_count, int menu_selected) {
 
 void displayMenuExit(void) {
 	printf("\n\npress any key to continue...");
+	fflush(stdin);
 	getch();
 	system("cls");
 }
@@ -295,14 +292,21 @@ void findWords(char *string, char **words, int *word_count) {
 	}
 }
 
-int deadlineCompare(Note note1, Note note2) {
-	int selisih_tahun   = note1.tahun   - note2.tahun;
-	int selisih_bulan   = note1.bulan   - note2.bulan;
-	int selisih_tanggal = note1.tanggal - note2.tanggal;
+int daysToDeadline(NodePtr notes) {
+	// menyimpan waktu sekarang untuk acuan waktu deadline
+	time_t rawtime;
+	struct tm *timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	
+	// menghitung selisih hari menuju deadline
+	int selisih_tahun   = timeinfo->tm_year + 1900 - notes->tahun;
+	int selisih_bulan   = timeinfo->tm_mon + 1     - notes->bulan;
+	int selisih_tanggal = timeinfo->tm_mday        - notes->tanggal;
 	return (selisih_tahun * 365) + (selisih_bulan * 30) + selisih_tanggal;
 }
 
-void printNote(Note *notes, int start, int length, char *message, int selected) {
+void printNote(NodePtr notes, int start, int length, char *message, int selected) {
 // menampilkan judul, matkul, deadline, dan progress
 // start adalah index pertama note yang ditampilkan
 // length adalah banyaknya notes yang ditampilkan
@@ -320,33 +324,38 @@ void printNote(Note *notes, int start, int length, char *message, int selected) 
 		printf("|%7s" , "INDEX");
 		printf("\n");
 	}
+	
+	for (i = 1; i < start; i++) {
+		notes = notes->next;
+	}
 
 	for (i = start; i < start + length; i++) {
 		// menampilkan note berwarna sesuai urgency deadline dan progress
-		int comparison = deadlineCompare(notes[0], notes[i]);
-		if (i == selected)
+		if (i == selected) // note dipilih
 			SET_COLOR(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		else if (notes[i].progress >= 100)
+		else if (notes->progress >= 100) // note sudah selesai
 			SET_COLOR(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-		else if (comparison >= -1)
+		else if (daysToDeadline(notes) >= -1) // deadline besok
 			SET_COLOR(FOREGROUND_RED);
-		else if (comparison >= -7)
+		else if (daysToDeadline(notes) >= -7) // deadline minggu depan
 			SET_COLOR(FOREGROUND_RED | FOREGROUND_GREEN);
 
-		printf("%50s"     , notes[i].judul);
-		printf("|%30s"    , notes[i].matkul);
-		printf("|    %02d", notes[i].tanggal);
-		printf("-%02d"    , notes[i].bulan);
-		printf("-%04d"    , notes[i].tahun);
-		printf("|%14d%%"  , notes[i].progress);
+		printf("%50s"     , notes->judul);
+		printf("|%30s"    , notes->matkul);
+		printf("|    %02d", notes->tanggal);
+		printf("-%02d"    , notes->bulan);
+		printf("-%04d"    , notes->tahun);
+		printf("|%14d%%"  , notes->progress);
 		printf("|%7d"     , i);
 		printf("\n");
 
 		RESET_COLOR();
+		
+		notes = notes->next;
 	}
 }
 
-void selectNote(Note *notes, int note_count, int note_selected) {
+void selectNote(NodePtr notes, int note_count, int note_selected) {
 	INIT_CONSOLE();
 	printNote(notes, 1, note_count, "--- ALL NOTES ---", note_selected);
 
@@ -356,70 +365,59 @@ void selectNote(Note *notes, int note_count, int note_selected) {
 	RESET_COLOR();
 }
 
-void printNoteDescription(Note *notes, int index) {
+void printNoteDescription(NodePtr notes, int index) {
 // Menampilkan suatu note dengan deskripsinya
+	int i;
 	INIT_CONSOLE();
 	// menampilkan deskripsi note berwarna sesuai urgency deadline dan progress
-	int comparison = deadlineCompare(notes[0], notes[index]);
-	if (notes[index].progress >= 100)
+	if (notes->progress >= 100) // note sudah selesai
 		SET_COLOR(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	else if (comparison >= -1)
+	else if (daysToDeadline(notes) >= -1) // deadline besok
 		SET_COLOR(FOREGROUND_RED);
-	else if (comparison >= -7)
+	else if (daysToDeadline(notes) >= -7) // deadline minggu depan
 		SET_COLOR(FOREGROUND_RED | FOREGROUND_GREEN);
 
+	for (i = 1; i < index; i++) {
+		notes = notes->next;
+	}
+
 	printf("\n");
-	printf("JUDUL: %s\n"      , notes[index].judul);
-	printf("MATA KULIAH: %s\n", notes[index].matkul);
+	printf("JUDUL: %s\n"      , notes->judul);
+	printf("MATA KULIAH: %s\n", notes->matkul);
 	printf(
 		"DEADLINE: %02d-%02d-%04d\n",
-		notes[index].tanggal,
-		notes[index].bulan,
-		notes[index].tahun
+		notes->tanggal,
+		notes->bulan,
+		notes->tahun
 	);
-	printf("PROGRESS: %d%%\n", notes[index].progress);
-	printf("DESKRIPSI: %s\n" , notes[index].deskripsi);
+	printf("PROGRESS: %d%%\n", notes->progress);
+	printf("DESKRIPSI: %s\n" , notes->deskripsi);
 
 	RESET_COLOR();
 }
 
-void addNote(Note *notes, int index) {
-	int tahun_skrg   = notes[0].tahun;
-	int bulan_skrg   = notes[0].bulan;
-	int tanggal_skrg = notes[0].tanggal;
-
-	// Meminta user memasukkan data-data untuk satu note
-	printf("\n-----------------------------------------------------------\n\n");
-	getString(notes[index].judul,     50,   "Masukkan judul");
-	getString(notes[index].deskripsi, 1000, "Masukkan deskripsi");
-	getString(notes[index].matkul,    30,   "Masukkan mata kuliah");
-
-	// Memastikan user tidak dapat memasukkan deadline yang sudah berlalu
-	notes[index].tahun = getInteger(tahun_skrg, tahun_skrg + 5, "Masukkan tahun deadline");
-	if (notes[index].tahun == tahun_skrg) {
-		notes[index].bulan = getInteger(bulan_skrg, 12, "Masukkan bulan deadline");
-		if (notes[index].bulan == bulan_skrg)
-			notes[index].tanggal = getInteger(tanggal_skrg, 31, "Masukkan tanggal deadline");
-		else
-			notes[index].tanggal = getInteger(1, 31, "Masukkan tanggal deadline");
-	} else {
-		notes[index].bulan = getInteger(1, 12, "Masukkan bulan deadline");
-		notes[index].tanggal = getInteger(1, 31, "Masukkan tanggal deadline");
-	}
-
-	notes[index].progress = getInteger(0, 100, "Masukkan persentase progress");
-	printf("\n-----------------------------------------------------------\n\n");
-}
-
-void deleteNote(Note *notes, int index, int note_count) {
+void deleteNote(NodePtr *notes, int index) {
 	int i;
-	// menindihkan (overwriting) note pada index sehingga terhapus
-	for (i = index; i <= note_count; i++) {
-		notes[i] = notes[i + 1];
+	NodePtr temp_ptr, previous_ptr, current_ptr;
+	
+	if (index == 1) {
+		temp_ptr = *notes;
+		*notes = (*notes)->next;
+		free(temp_ptr);
+		return;
 	}
+	
+	current_ptr = *notes;
+	for (i = 1; i < index; i++) {
+		previous_ptr = current_ptr;
+		current_ptr = current_ptr->next;
+	}
+	temp_ptr = current_ptr;
+	previous_ptr->next = current_ptr->next;
+	free(temp_ptr);
 }
 
-void searchJudul(Note *notes, int note_count, char *key) {
+void searchJudul(NodePtr notes, char *key) {
 	int i, j, k, key_count = 0, judul_count = 0, found = FALSE, match;
 	char *key_words[25], *judul_words[25], judul[50];
 
@@ -427,9 +425,9 @@ void searchJudul(Note *notes, int note_count, char *key) {
 	findWords(key, key_words, &key_count);
 
 	// linar search
-	for (i = 1; i <= note_count; i++) {
+	for (i = 1; notes != NULL; i++) {
 		match = TRUE;
-		strcpy(judul, notes[i].judul);
+		strcpy(judul, notes->judul);
 		lowercase(judul);
 		findWords(judul, judul_words, &judul_count);
 
@@ -451,13 +449,15 @@ void searchJudul(Note *notes, int note_count, char *key) {
 		} else if (match == TRUE) {
 			printNote(notes, i, 1, "", -1);
 		}
+		
+		notes = notes->next;
 	}
 
 	if (found == FALSE)
 		printf("NOT FOUND\n");
 }
 
-void searchMatkul(Note *notes, int note_count, char *key) {
+void searchMatkul(NodePtr notes, char *key) {
 	int i, j, k, key_count = 0, matkul_count = 0, found = FALSE, match;
 	char *key_words[25], *matkul_words[25], matkul[50];
 
@@ -465,9 +465,9 @@ void searchMatkul(Note *notes, int note_count, char *key) {
 	findWords(key, key_words, &key_count);
 
 	// linar search
-	for (i = 1; i <= note_count; i++) {
+	for (i = 1; notes != NULL; i++) {
 		match = TRUE;
-		strcpy(matkul, notes[i].matkul);
+		strcpy(matkul, notes->matkul);
 		lowercase(matkul);
 		findWords(matkul, matkul_words, &matkul_count);
 
@@ -489,12 +489,14 @@ void searchMatkul(Note *notes, int note_count, char *key) {
 		} else if (match == TRUE) {
 			printNote(notes, i, 1, "", -1);
 		}
+		
+		notes = notes->next;
 	}
 
 	if (found == FALSE)
 		printf("NOT FOUND\n");
 }
-
+/*
 void sortNote(Note *destination, Note *source, int i_begin, int i_end, int mode) {
 	if (i_end - i_begin <= 1)
 		return;
@@ -571,9 +573,17 @@ void mergeDeadlineDescending(Note *destination, Note *source, int i_begin, int i
 		}
 	}
 }
-
-void displayNoteSelected(Note *notes, int note_count, int *note_selected) {
+*/
+void displayNoteSelected(NodePtr notes, int *note_selected) {
+	NodePtr temp = notes;
+	int note_count = 0;
 	char char_input;
+	
+	while (temp != NULL) {
+		note_count++;
+		temp = temp->next;
+	}
+	
 	do {
 		system("cls");
 		selectNote(notes, note_count, *note_selected);
@@ -593,8 +603,8 @@ void displayNoteSelected(Note *notes, int note_count, int *note_selected) {
 	system("cls");
 }
 
-int emptyNoteError(int note_count) {
-	if (note_count <= 0) {
+int emptyNoteError(NodePtr notes) {
+	if (notes == NULL) {
 		printf("ERROR: note kosong!\n");
 		displayMenuExit();
 		return 1;
@@ -602,22 +612,13 @@ int emptyNoteError(int note_count) {
 	return 0;
 }
 
-int maxNoteError(int note_count) {
-	if (note_count >= MAX_NOTE_COUNT) {
-		printf("ERROR: note penuh!\n");
-		displayMenuExit();
-		return 1;
-	}
-	return 0;
-}
-
-void menuViewNote(Note *notes, int note_count) {
-	if (emptyNoteError(note_count))
+void menuViewNote(NodePtr notes) {
+	if (emptyNoteError(notes))
 		return;
 
 	int note_selected = 0;
 	while (TRUE) {
-		displayNoteSelected(notes, note_count, &note_selected);
+		displayNoteSelected(notes, &note_selected);
 		if (note_selected <= 0) {
 			return;
 		} else {
@@ -627,10 +628,7 @@ void menuViewNote(Note *notes, int note_count) {
 	}
 }
 
-void menuAddNote(Note *notes, int *note_count) {
-	if (maxNoteError(*note_count))
-		return;
-
+void menuAddNote(NodePtr *notes) {
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -639,28 +637,51 @@ void menuAddNote(Note *notes, int *note_count) {
 		"***********************************************************\n"
 	};
 	displayTitle(title, 5);
-	addNote(notes, (*note_count) + 1);
-	(*note_count)++;
+	
+	NodePtr new_ptr = malloc(sizeof(Node)), current_ptr = *notes, previous_ptr;
+
+	// Meminta user memasukkan data-data untuk satu note
+	printf("\n-----------------------------------------------------------\n\n");
+	getString(new_ptr->judul,     50,   "Masukkan judul");
+	getString(new_ptr->deskripsi, 1000, "Masukkan deskripsi");
+	getString(new_ptr->matkul,    30,   "Masukkan mata kuliah");
+	new_ptr->tahun    = getInteger(0, 9999, "Masukkan tahun deadline");
+	new_ptr->bulan    = getInteger(1, 12,   "Masukkan bulan deadline");
+	new_ptr->tanggal  = getInteger(1, 31,   "Masukkan tanggal deadline");
+	new_ptr->progress = getInteger(0, 100,  "Masukkan persentase progress");
+	new_ptr->next     = NULL;
+	printf("\n-----------------------------------------------------------\n\n");
+	
+	if (*notes == NULL) {
+		*notes = new_ptr;
+		return;
+	}
+	
+	while (current_ptr != NULL) {
+		previous_ptr = current_ptr;
+		current_ptr = current_ptr->next;
+	}
+	previous_ptr->next = new_ptr;
+	
 	displayMenuExit();
 }
 
-void menuDeleteNote(Note *notes, int *note_count) {
-	if (emptyNoteError(*note_count))
+void menuDeleteNote(NodePtr *notes) {
+	if (emptyNoteError(*notes))
 		return;
 
-	int note_selected = 0;
+	int note_selected;
 	while (TRUE) {
-		displayNoteSelected(notes, *note_count, &note_selected);
+		note_selected = 0;
+		displayNoteSelected(*notes, &note_selected);
+		
 		if (note_selected <= 0) {
 			return;
 		} else {
-			printNote(notes, note_selected, 1, "--- YANG AKAN DIHAPUS ---", -1);
+			printNote(*notes, note_selected, 1, "--- YANG AKAN DIHAPUS ---", -1);
 			printf("\n\nApakah anda yakin untuk menghapus note tersebut? (tekan y untuk konfirmasi)");
-			if (getch() == 'y') {
-				deleteNote(notes, note_selected, *note_count);
-				if (note_selected == *note_count)
-					note_selected--;
-				(*note_count)--;
+			if ((getch() | 32) == 'y') {
+				deleteNote(notes, note_selected);
 				system("cls");
 				printf("Note telah dihapus.\n");
 				displayMenuExit();
@@ -669,23 +690,41 @@ void menuDeleteNote(Note *notes, int *note_count) {
 	}
 }
 
-void menuEditNoteProgress(Note *notes, int *note_count) {
-	if (emptyNoteError(*note_count))
+void menuEditNote(NodePtr *notes) {
+	if (emptyNoteError(*notes))
 		return;
 
 	int note_selected = 0;
 	while (TRUE) {
-		displayNoteSelected(notes, *note_count, &note_selected);
+		displayNoteSelected(*notes, &note_selected);
 		if (note_selected <= 0) {
 			return;
 		} else {
-			notes[note_selected].progress = getInteger(0, 100, "Masukkan persentase progress baru");
+			int i;
+			NodePtr current_ptr = *notes;
+			
+			for (i = 1; i < note_selected; i++) {
+				current_ptr = current_ptr->next;
+			}
+			
+			// Meminta user memasukkan data-data untuk satu note
+			printf("\n-----------------------------------------------------------\n\n");
+			getString(current_ptr->judul,     50,   "Masukkan judul");
+			getString(current_ptr->deskripsi, 1000, "Masukkan deskripsi");
+			getString(current_ptr->matkul,    30,   "Masukkan mata kuliah");
+			current_ptr->tahun    = getInteger(0, 9999, "Masukkan tahun deadline");
+			current_ptr->bulan    = getInteger(1, 12,   "Masukkan bulan deadline");
+			current_ptr->tanggal  = getInteger(1, 31,   "Masukkan tanggal deadline");
+			current_ptr->progress = getInteger(0, 100,  "Masukkan persentase progress");
+			printf("\n-----------------------------------------------------------\n\n");
+			
+			displayMenuExit();
 		}
 	}
 }
 
-void menuSearchNote(Note *notes, int note_count) {
-	if (emptyNoteError(note_count))
+void menuSearchNote(NodePtr notes) {
+	if (emptyNoteError(notes))
 		return;
 
 	char *title[] = {
@@ -709,24 +748,24 @@ void menuSearchNote(Note *notes, int note_count) {
 				return;
 			case 1:
 				getString(key, 50, "Masukkan judul yang ingin dicari");
-				searchJudul(notes, note_count, key);
+				searchJudul(notes, key);
 				displayMenuExit();
 				break;
 			case 2:
 				getString(key, 30, "Masukkan mata kuliah yang ingin dicari");
-				searchMatkul(notes, note_count, key);
+				searchMatkul(notes, key);
 				displayMenuExit();
 				break;
 		}
 	}
 }
-
-void menuSortNote(Note *notes, int note_count) {
-	if (emptyNoteError(note_count))
+/*
+void menuSortNote(NodePtr *notes) {
+	if (emptyNoteError(*notes))
 		return;
 
-	int i, menu_selected = 0;
-	Note sort_array[MAX_NOTE_COUNT + 1]; // array untuk merge sort
+	int i, note_count = 0, menu_selected = 0;
+	NodePtr temp = *notes;
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -741,6 +780,15 @@ void menuSortNote(Note *notes, int note_count) {
 		"Mengurutkan berdasarkan progress (ascending)",
 		"Mengurutkan berdasarkan progress (descending)"
 	};
+	
+	while (temp != NULL) {
+		note_count++;
+		temp = temp->next;
+	}
+	
+	// Array untuk merge sort
+	Node note_array[] = malloc(sizeof(Node) * note_count),
+		sort_array[] = malloc(sizeof(Node) * note_count);
 
 	while (TRUE) {
 		displayMenuAndTitle(title, 5, menu, 5, &menu_selected);
@@ -769,13 +817,15 @@ void menuSortNote(Note *notes, int note_count) {
 				sortNote(notes, sort_array, 1, note_count + 1, 3);
 				printNote(notes, 1, note_count, "--- PROGRESS DESCENDING ---", 0);
 				displayMenuExit();
+				free(note_array);
+				free(sort_array);
 				break;
 		}
 	}
 }
 
-void menuImportNote(Note *notes, int *note_count) {
-	char file_name[50];
+void menuImportNote(NodePtr *notes) {
+	char file_name[64];
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -783,10 +833,12 @@ void menuImportNote(Note *notes, int *note_count) {
 		"*                                                         *\n",
 		"***********************************************************\n"
 	};
+	NodePtr new_ptr = malloc(sizeof(Node)), current_ptr;
 
 	displayTitle(title, 5);
 	printf("\n-----------------------------------------------------------\n\n");
-	getString(file_name, 50, "Masukkan nama file");
+	getString(file_name, 64, "Masukkan nama file (tanpa ekstensi)");
+	strcat(file_name, ".teknote");
 
 	FILE *fptr = fopen(file_name, "r");
 	if (fptr == NULL) {
@@ -797,7 +849,6 @@ void menuImportNote(Note *notes, int *note_count) {
 
 	int i;
 	char buff[2000];
-	*note_count = 0;
 
 	if (fgets(buff, 2000, fptr) == NULL) {
 		printf("ERROR: file kosong!\n");
@@ -811,36 +862,49 @@ void menuImportNote(Note *notes, int *note_count) {
 		return;
 	}
 
-	for (i = 1; fgets(buff, 2000, fptr) != NULL; i++) {
-		if (maxNoteError(*note_count))
-			return;
-
+	while (*notes != NULL){
+		current_ptr = (*notes)->next;
+		free(*notes);
+		*notes = current_ptr;
+	}
+	
+	while (fgets(buff, 2000, fptr) != NULL) {
 		sscanf(
 			buff,
 			"%[^,],%[^,],%[^,],%d,%d,%d,%d",
-			notes[i].judul,
-			notes[i].deskripsi,
-			notes[i].matkul,
-			&notes[i].tanggal,
-			&notes[i].bulan,
-			&notes[i].tahun,
-			&notes[i].progress
+			new_ptr->judul,
+			new_ptr->deskripsi,
+			new_ptr->matkul,
+			new_ptr->tanggal,
+			new_ptr->bulan,
+			new_ptr->tahun,
+			new_ptr->progress
 		);
-
-		(*note_count)++;
+		new_ptr->next = NULL;
+		
+		if (*notes == NULL) {
+			*notes = new_ptr;
+			current_ptr = *notes;
+			return;
+		}
+		
+		return;
+		current_ptr->next = new_ptr;
+		current_ptr = current_ptr->next;
 	}
+	
 	fclose(fptr);
 	printf("Import berhasil!\n");
 	printf("\n-----------------------------------------------------------\n\n");
 	displayMenuExit();
 }
-
-void menuExportNote(Note *notes, int note_count) {
-	if (emptyNoteError(note_count))
+*/
+void menuExportNote(NodePtr notes) {
+	if (emptyNoteError(notes))
 		return;
 
 	int i;
-	char file_name[50];
+	char file_name[64];
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -851,7 +915,8 @@ void menuExportNote(Note *notes, int note_count) {
 
 	displayTitle(title, 5);
 	printf("\n-----------------------------------------------------------\n\n");
-	getString(file_name, 50, "Masukkan nama file");
+	getString(file_name, 64, "Masukkan nama file (tanpa ekstensi)");
+	strcat(file_name, ".teknote");
 
 	FILE *fptr = fopen(file_name, "w");
 	if (fptr == NULL) {
@@ -861,19 +926,20 @@ void menuExportNote(Note *notes, int note_count) {
 	}
 
 	fprintf(fptr, "JUDUL,DESKRIPSI,MATA KULIAH,TANGGAL,BULAN,TAHUN,PROGRESS\n");
-	for (i = 1; i <= note_count; i++) {
+	for (; notes != NULL; notes = notes->next) {
 		fprintf(
 			fptr,
 			"%s,%s,%s,%d,%d,%d,%d\n",
-			notes[i].judul,
-			notes[i].deskripsi,
-			notes[i].matkul,
-			notes[i].tanggal,
-			notes[i].bulan,
-			notes[i].tahun,
-			notes[i].progress
+			notes->judul,
+			notes->deskripsi,
+			notes->matkul,
+			notes->tanggal,
+			notes->bulan,
+			notes->tahun,
+			notes->progress
 		);
 	}
+	
 	fclose(fptr);
 	printf("Export berhasil!\n");
 	printf("\n-----------------------------------------------------------\n\n");
