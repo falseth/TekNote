@@ -49,6 +49,7 @@ void deleteNote(NodePtr *notes, int index);
 void selectNote(NodePtr notes, int note_count, int note_selected);
 void displayNoteSelected(NodePtr notes, int *note_selected);
 int  daysToDeadline(NodePtr notes);
+int  deadlineCompare(Node note1, Node note2);
 void searchJudul(NodePtr notes, char *key);
 void searchMatkul(NodePtr notes, char *key);
 void sortNote(Node *destination, Node *source, int i_begin, int i_end, int mode);
@@ -315,6 +316,14 @@ int daysToDeadline(NodePtr notes) {
 	return (selisih_tahun * 365) + (selisih_bulan * 30) + selisih_tanggal;
 }
 
+int deadlineCompare(Node note1, Node note2) {
+// menghitung selisih hari antara deadline note1 dan deadline note2 untuk sorting
+	int selisih_tahun   = note1.tahun   - note2.tahun;
+	int selisih_bulan   = note1.bulan   - note2.bulan;
+	int selisih_tanggal = note1.tanggal - note2.tanggal;
+	return (selisih_tahun * 365) + (selisih_bulan * 30) + selisih_tanggal;
+}
+
 void printNote(NodePtr notes, int start, int length, char *message, int selected) {
 // menampilkan judul, matkul, deadline, dan progress
 // start adalah index pertama note yang ditampilkan
@@ -509,8 +518,8 @@ void searchMatkul(NodePtr notes, char *key) {
 	if (found == FALSE)
 		printf("NOT FOUND\n");
 }
-/*
-void sortNote(Note *destination, Note *source, int i_begin, int i_end, int mode) {
+
+void sortNote(Node *destination, Node *source, int i_begin, int i_end, int mode) {
 	if (i_end - i_begin <= 1)
 		return;
 
@@ -535,7 +544,7 @@ void sortNote(Note *destination, Note *source, int i_begin, int i_end, int mode)
 	}
 }
 
-void mergeProgressAscending(Note *destination, Note *source, int i_begin, int i_middle, int i_end) {
+void mergeProgressAscending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || source[i].progress <= source[j].progress)) {
@@ -548,7 +557,7 @@ void mergeProgressAscending(Note *destination, Note *source, int i_begin, int i_
 	}
 }
 
-void mergeProgressDescending(Note *destination, Note *source, int i_begin, int i_middle, int i_end) {
+void mergeProgressDescending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || source[i].progress >= source[j].progress)) {
@@ -561,7 +570,7 @@ void mergeProgressDescending(Note *destination, Note *source, int i_begin, int i
 	}
 }
 
-void mergeDeadlineAscending(Note *destination, Note *source, int i_begin, int i_middle, int i_end) {
+void mergeDeadlineAscending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || deadlineCompare(source[i], source[j]) <= 0)) {
@@ -574,7 +583,7 @@ void mergeDeadlineAscending(Note *destination, Note *source, int i_begin, int i_
 	}
 }
 
-void mergeDeadlineDescending(Note *destination, Note *source, int i_begin, int i_middle, int i_end) {
+void mergeDeadlineDescending(Node *destination, Node *source, int i_begin, int i_middle, int i_end) {
 	int i = i_begin, j = i_middle, k;
 	for (k = i_begin; k < i_end; k++) {
 		if (i < i_middle && (j >= i_end || deadlineCompare(source[i], source[j]) >= 0)) {
@@ -586,7 +595,7 @@ void mergeDeadlineDescending(Note *destination, Note *source, int i_begin, int i
 		}
 	}
 }
-*/
+
 void displayNoteSelected(NodePtr notes, int *note_selected) {
 	//fungsi ini menampilkan note yang dipilih
 	NodePtr temp = notes;
@@ -779,13 +788,13 @@ void menuSearchNote(NodePtr notes) {
 		}
 	}
 }
-/*
+
 void menuSortNote(NodePtr *notes) {
 	if (emptyNoteError(*notes))
 		return;
 
 	int i, note_count = 0, menu_selected = 0;
-	NodePtr temp = *notes;
+	NodePtr temp;
 	char *title[] = {
 		"***********************************************************\n",
 		"*                                                         *\n",
@@ -801,44 +810,115 @@ void menuSortNote(NodePtr *notes) {
 		"Mengurutkan berdasarkan progress (descending)"
 	};
 	
+	temp = *notes;
 	while (temp != NULL) {
 		note_count++;
 		temp = temp->next;
 	}
 	
 	// Array untuk merge sort
-	Node note_array[] = malloc(sizeof(Node) * note_count),
-		sort_array[] = malloc(sizeof(Node) * note_count);
+	Node *note_array = malloc(sizeof(Node) * note_count),
+		*sort_array = malloc(sizeof(Node) * note_count);
+	
+	temp = *notes;
+	for (i = 1; i <= note_count; i++) {
+		strcpy(note_array[i].judul,     temp->judul);
+		strcpy(note_array[i].deskripsi, temp->deskripsi);
+		strcpy(note_array[i].matkul,    temp->matkul);
+		note_array[i].tahun     = temp->tahun;
+		note_array[i].bulan     = temp->bulan;
+		note_array[i].tanggal   = temp->tanggal;
+		note_array[i].progress  = temp->progress;
+		
+		temp = temp->next;
+	}
 
 	while (TRUE) {
 		displayMenuAndTitle(title, 5, menu, 5, &menu_selected);
 		for(i = 1; i <= note_count; i++) {
-			sort_array[i] = notes[i];
+			sort_array[i] = note_array[i];
 		}
+		
 		switch (menu_selected) {
 			case 0:
+				free(note_array);
+				free(sort_array);
 				return;
 			case 1:
-				sortNote(notes, sort_array, 1, note_count + 1, 0);
-				printNote(notes, 1, note_count, "--- DEADLINE ASCENDING ---", 0);
+				sortNote(note_array, sort_array, 1, note_count + 1, 0);
+				
+				temp = *notes;
+				for (i = 1; i <= note_count; i++) {
+					strcpy(temp->judul, note_array[i].judul);
+					strcpy(temp->deskripsi, note_array[i].deskripsi);
+					strcpy(temp->matkul, note_array[i].matkul);
+					temp->tahun = note_array[i].tahun;
+					temp->bulan = note_array[i].bulan;
+					temp->tanggal = note_array[i].tanggal;
+					temp->progress = note_array[i].progress;
+					
+					temp = temp->next;
+				}
+				
+				printNote(*notes, 1, note_count, "--- DEADLINE ASCENDING ---", -1);
 				displayMenuExit();
 				break;
 			case 2:
-				sortNote(notes, sort_array, 1, note_count + 1, 1);
-				printNote(notes, 1, note_count, "--- DEADLINE DESCENDING ---", 0);
+				sortNote(note_array, sort_array, 1, note_count + 1, 1);
+				
+				temp = *notes;
+				for (i = 1; i <= note_count; i++) {
+					strcpy(temp->judul, note_array[i].judul);
+					strcpy(temp->deskripsi, note_array[i].deskripsi);
+					strcpy(temp->matkul, note_array[i].matkul);
+					temp->tahun = note_array[i].tahun;
+					temp->bulan = note_array[i].bulan;
+					temp->tanggal = note_array[i].tanggal;
+					temp->progress = note_array[i].progress;
+					
+					temp = temp->next;
+				}
+				
+				printNote(*notes, 1, note_count, "--- DEADLINE DESCENDING ---", -1);
 				displayMenuExit();
 				break;
 			case 3:
-				sortNote(notes, sort_array, 1, note_count + 1, 2);
-				printNote(notes, 1, note_count, "--- PROGRESS ASCENDING ---", 0);
+				sortNote(note_array, sort_array, 1, note_count + 1, 2);
+				
+				temp = *notes;
+				for (i = 1; i <= note_count; i++) {
+					strcpy(temp->judul, note_array[i].judul);
+					strcpy(temp->deskripsi, note_array[i].deskripsi);
+					strcpy(temp->matkul, note_array[i].matkul);
+					temp->tahun = note_array[i].tahun;
+					temp->bulan = note_array[i].bulan;
+					temp->tanggal = note_array[i].tanggal;
+					temp->progress = note_array[i].progress;
+					
+					temp = temp->next;
+				}
+				
+				printNote(*notes, 1, note_count, "--- PROGRESS ASCENDING ---", -1);
 				displayMenuExit();
 				break;
 			case 4:
-				sortNote(notes, sort_array, 1, note_count + 1, 3);
-				printNote(notes, 1, note_count, "--- PROGRESS DESCENDING ---", 0);
+				sortNote(note_array, sort_array, 1, note_count + 1, 3);
+				
+				temp = *notes;
+				for (i = 1; i <= note_count; i++) {
+					strcpy(temp->judul, note_array[i].judul);
+					strcpy(temp->deskripsi, note_array[i].deskripsi);
+					strcpy(temp->matkul, note_array[i].matkul);
+					temp->tahun = note_array[i].tahun;
+					temp->bulan = note_array[i].bulan;
+					temp->tanggal = note_array[i].tanggal;
+					temp->progress = note_array[i].progress;
+					
+					temp = temp->next;
+				}
+				
+				printNote(*notes, 1, note_count, "--- PROGRESS DESCENDING ---", -1);
 				displayMenuExit();
-				free(note_array);
-				free(sort_array);
 				break;
 		}
 	}
@@ -853,7 +933,7 @@ void menuImportNote(NodePtr *notes) {
 		"*                                                         *\n",
 		"***********************************************************\n"
 	};
-	NodePtr new_ptr = malloc(sizeof(Node)), current_ptr;
+	NodePtr new_ptr, current_ptr;
 
 	displayTitle(title, 5);
 	printf("\n-----------------------------------------------------------\n\n");
@@ -868,9 +948,9 @@ void menuImportNote(NodePtr *notes) {
 	}
 
 	int i;
-	char buff[2000];
+	char buff[2048];
 
-	if (fgets(buff, 2000, fptr) == NULL) {
+	if (fgets(buff, 2048, fptr) == NULL) {
 		printf("ERROR: file kosong!\n");
 		displayMenuExit();
 		return;
@@ -888,27 +968,28 @@ void menuImportNote(NodePtr *notes) {
 		*notes = current_ptr;
 	}
 	
-	while (fgets(buff, 2000, fptr) != NULL) {
+	while (fgets(buff, 2048, fptr) != NULL) {
+		new_ptr = malloc(sizeof(Node));
+		
 		sscanf(
 			buff,
 			"%[^,],%[^,],%[^,],%d,%d,%d,%d",
-			new_ptr->judul,
-			new_ptr->deskripsi,
-			new_ptr->matkul,
-			new_ptr->tanggal,
-			new_ptr->bulan,
-			new_ptr->tahun,
-			new_ptr->progress
+			&new_ptr->judul,
+			&new_ptr->deskripsi,
+			&new_ptr->matkul,
+			&new_ptr->tanggal,
+			&new_ptr->bulan,
+			&new_ptr->tahun,
+			&new_ptr->progress
 		);
 		new_ptr->next = NULL;
-		
+
 		if (*notes == NULL) {
 			*notes = new_ptr;
 			current_ptr = *notes;
-			return;
+			continue;
 		}
 		
-		return;
 		current_ptr->next = new_ptr;
 		current_ptr = current_ptr->next;
 	}
@@ -918,7 +999,7 @@ void menuImportNote(NodePtr *notes) {
 	printf("\n-----------------------------------------------------------\n\n");
 	displayMenuExit();
 }
-*/
+
 void menuExportNote(NodePtr notes) {
 	//fungsi ini mengekspor note yang ada
 	if (emptyNoteError(notes))
