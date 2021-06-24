@@ -10,8 +10,8 @@ Aplikasi ini juga telah dibuat sedemikian rupa agar mudah untuk digunakan oleh p
 Aplikasi TekNote dibuat untuk proyek akhir semester mata kuliah Pemrograman Lanjut oleh kelompok 7 yang beranggotakan:
 
 	- Muhammad Irsyad Fakhruddin (2006468850),
-	- Muhammad Roland Maulana (2006520784),
-	- Yehezkiel Jonatan (2006520235).
+	- [Muhammad Roland Maulana (2006520784)](https://github.com/rolandmaulana), dan
+	- [Yehezkiel Jonatan (2006520235)](https://github.com/falseth).
 
 Akan tetapi, dalam proses pembuatannya, **Muhammad Irsyad Fakhruddin (2006468850) tidak berkontribusi sama sekali dan juga sulit untuk dihubungi**.
 Dengan demikian, mahasiswa yang berkontribusi dalam pembuatan aplikasi TekNote ini adalah Muhammad Roland Maulana (2006520784) dan Yehezkiel Jonatan (2006520235).
