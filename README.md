@@ -5,7 +5,7 @@ Setelah data-data tersebut dikumpulkan, aplikasi dapat menampilkan tugas yang te
 Selain itu, pengguna juga dapat mencari catatan berdasarkan mata kuliah atau judul tugas tertentu yang ingin dilihat lebih detail.
 Aplikasi ini juga telah dibuat sedemikian rupa agar mudah untuk digunakan oleh pengguna.
 
-## URL Video demonstrasi dan penjelasan: 
+## URL Video demonstrasi dan penjelasan: https://youtu.be/5qNt8ZIf6zA
 
 Aplikasi TekNote dibuat untuk proyek akhir semester mata kuliah Pemrograman Lanjut oleh kelompok 7 yang beranggotakan:
 
