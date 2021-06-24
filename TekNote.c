@@ -15,6 +15,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <omp.h>
 #define TRUE 1
 #define FALSE 0
 #define INIT_CONSOLE() HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);\
